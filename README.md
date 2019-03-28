@@ -96,8 +96,8 @@ class TT_Example_List_Table extends WP_List_Table {
                 
         //Set parent defaults
         parent::__construct( array(
-            'singular'  => 'movie',     //singular name of the listed records
-            'plural'    => 'movies',    //plural name of the listed records
+            'singular'  => 'provider',     //singular name of the listed records
+            'plural'    => 'providers',    //plural name of the listed records
             'ajax'      => false        //does this table support ajax?
         ) );
         
@@ -127,14 +127,12 @@ class TT_Example_List_Table extends WP_List_Table {
         
         //Build row actions
         $actions = array(
-            'edit'      => sprintf('<a href="?page=%s&action=%s&movie=%s">Edit</a>',$_REQUEST['page'],'edit',$item['id']),
-            'delete'    => sprintf('<a href="?page=%s&action=%s&movie=%s">Delete</a>',$_REQUEST['page'],'delete',$item['id']),
+            'delete'    => sprintf('<a href="?page=%s&action=%s&provider=%s">Delete</a>',$_REQUEST['page'],'delete',$item['id']),
         );
         
         //Return the title contents
-        return sprintf('%1$s <span style="color:silver">(id:%2$s)</span>%3$s',
+        return sprintf('%1$s %2$s',
             /*$1%s*/ $item['provider'],
-            /*$2%s*/ $item['id'],
             /*$3%s*/ $this->row_actions($actions)
         );
     }
@@ -157,6 +155,72 @@ class TT_Example_List_Table extends WP_List_Table {
                                             }
         return sprintf('<br> <span style="color:silver">%1$s</span>',
             /*$1%s*/ $item['overall_rating']
+        );
+                                        
+    }
+    
+    function column_service($item){
+        
+      
+                                            $totalRating = 5;
+                                            $starRatingSER=$item['service'];
+                                            for ($i = 1; $i <= $totalRating; $i++) {
+                                                 if($starRatingSER < $i ) {
+                                                    if(round($starRatingSER) == $i){ 
+                                                      echo '<img src="'.get_template_directory_uri().'/images/half.png">';
+                                                    }else{ 
+                                                       echo '<img src="'.get_template_directory_uri().'/images/empty.png">';
+                                                    }
+                                                 }else{ 
+                                                   echo '<img src="'.get_template_directory_uri().'/images/full.png">';
+                                               }
+                                            }
+        return sprintf('<br> <span style="color:silver">%1$s</span>',
+            /*$1%s*/ $item['service']
+        );
+                                        
+    }
+    
+    function column_price($item){
+        
+      
+                                            $totalRating = 5;
+                                            $starRatingSER=$item['price'];
+                                            for ($i = 1; $i <= $totalRating; $i++) {
+                                                 if($starRatingSER < $i ) {
+                                                    if(round($starRatingSER) == $i){ 
+                                                      echo '<img src="'.get_template_directory_uri().'/images/half.png">';
+                                                    }else{ 
+                                                       echo '<img src="'.get_template_directory_uri().'/images/empty.png">';
+                                                    }
+                                                 }else{ 
+                                                   echo '<img src="'.get_template_directory_uri().'/images/full.png">';
+                                               }
+                                            }
+        return sprintf('<br> <span style="color:silver">%1$s</span>',
+            /*$1%s*/ $item['price']
+        );
+                                        
+    }
+    
+    function column_speed($item){
+        
+      
+                                            $totalRating = 5;
+                                            $starRatingSER=$item['speed'];
+                                            for ($i = 1; $i <= $totalRating; $i++) {
+                                                 if($starRatingSER < $i ) {
+                                                    if(round($starRatingSER) == $i){ 
+                                                      echo '<img src="'.get_template_directory_uri().'/images/half.png">';
+                                                    }else{ 
+                                                       echo '<img src="'.get_template_directory_uri().'/images/empty.png">';
+                                                    }
+                                                 }else{ 
+                                                   echo '<img src="'.get_template_directory_uri().'/images/full.png">';
+                                               }
+                                            }
+        return sprintf('<br> <span style="color:silver">%1$s</span>',
+            /*$1%s*/ $item['speed']
         );
                                         
     }
@@ -207,10 +271,36 @@ class TT_Example_List_Table extends WP_List_Table {
     }
 	function process_bulk_action() {
         
-        //Detect when a bulk action is being triggered...
-        if( 'delete'===$this->current_action() ) {
-            wp_die('Items deleted (or they would be if we had items to delete)!');
+        if ( isset( $_POST['_wpnonce'] ) && ! empty( $_POST['_wpnonce'] ) ) {
+
+            $nonce  = filter_input( INPUT_POST, '_wpnonce', FILTER_SANITIZE_STRING );
+            $action = 'bulk-' . $this->_args['plural'];
+
+            if ( ! wp_verify_nonce( $nonce, $action ) )
+                wp_die( 'Nope! Security check failed!' );
+
         }
+
+        $action = $this->current_action();
+
+        switch ( $action ) {
+            case 'delete':
+                global $wpdb;
+                $table_name = $wpdb->prefix . 'rating';
+                $ids = isset($_REQUEST['providers']) ? $_REQUEST['providers'] : array();
+                    if (is_array($ids)) $ids = implode(',', $ids);
+                    if (!empty($ids)) {
+                        $wpdb->query("DELETE FROM $table_name WHERE id IN($ids)");
+                }
+
+                wp_die( 'You have deleted this succesfully' );
+                break;
+            default:
+                // do nothing or something else
+                return;
+                break;    
+        }
+        
         
     }
 
@@ -236,7 +326,7 @@ class TT_Example_List_Table extends WP_List_Table {
         }
         usort($data, 'usort_reorder');
         
-       
+       $action = $this->current_action();
         $current_page = $this->get_pagenum();
         
         $total_items = count($data);
