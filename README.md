@@ -69,7 +69,7 @@ require_once(ROOTDIR . 'rating-form.php');
 require_once(ROOTDIR . 'table-list-class.php');
 ```
  
-# create File in custom plugin folder
+# table-list-class.php
 ```
 <?php if(!class_exists('WP_List_Table')){
     require_once( ABSPATH . 'wp-admin/includes/class-wp-list-table.php' );
